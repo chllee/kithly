@@ -105,10 +105,10 @@ create table public.media_favourites (
 );
 
 create table public.media_embeddings (
-  media_id    uuid         primary key references public.media(id),
-  embedding   vector(1536) not null,
-  model       text         not null,
-  created_at  timestamptz  not null default now()
+  media_id    uuid        primary key references public.media(id),
+  embedding   vector(3072) not null,
+  model       text        not null,
+  created_at  timestamptz not null default now()
 );
 
 
@@ -178,14 +178,18 @@ create trigger on_event_created
 -- Returns all event IDs the current user is an active member of.
 -- Declared SECURITY DEFINER so it bypasses RLS when querying event_members,
 -- which prevents infinite recursion in policies that check membership.
+-- Returns uuid[] (not setof uuid) so it can be used in RLS policy expressions.
+-- Must be VOLATILE (not STABLE) so it isn't cached within INSERT...RETURNING
+-- statements — the handle_new_event trigger adds the creator to event_members
+-- within the same transaction, and a cached result would miss that new row.
 create or replace function public.my_event_ids()
-returns setof uuid
+returns uuid[]
 language sql
 security definer
-stable
+volatile
 set search_path = public
 as $$
-  select event_id
+  select array_agg(event_id)
   from event_members
   where user_id = auth.uid()
   and deleted_at is null;

@@ -1,33 +1,26 @@
-# Environment
-.env
-.env.local
-.env.*.local
-
-# Dependencies
-node_modules/
-
-# Build outputs
-dist/
-build/
-.next/
-out/
-
-# Supabase
-supabase/.branches
-supabase/.temp
-
-# OS
-.DS_Store
-Thumbs.db
-
 # Logs
+logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Editor
-.vscode/
-.idea/
-*.swp
-*.swo
+node_modules
+dist
+dist-ssr
+*.local
+
+.env
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
