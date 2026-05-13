@@ -1,7 +1,53 @@
 import { useState } from 'react'
+import styled from 'styled-components'
+import { Search } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import MediaItem from './MediaItem'
+import { Input, PrimaryButton, ErrorMsg, MutedText } from './ui'
+
+const SearchForm = styled.form`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing.sm};
+`
+
+const ResultsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  border-radius: ${({ theme }) => theme.radius.lg};
+  overflow: hidden;
+  margin-top: ${({ theme }) => theme.spacing.md};
+`
+
+const Thumbnail = styled.div`
+  aspect-ratio: 1;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+
+  &:hover img, &:hover video { transform: scale(1.05); }
+
+  img, video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+  }
+`
+
+const EventLabel = styled.p`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 4px 6px;
+  background: rgba(45, 15, 10, 0.7);
+  color: rgba(253, 248, 240, 0.9);
+  font-size: ${({ theme }) => theme.font.sizeXs};
+  font-weight: ${({ theme }) => theme.font.weightSemibold};
+`
 
 export default function SearchBar({ eventId }) {
   const { session } = useAuth()
@@ -22,21 +68,13 @@ export default function SearchBar({ eventId }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query, userId: session.user.id, eventId: eventId ?? null }),
     })
-
     const json = await res.json()
+    if (!res.ok) { setError(json.error ?? 'Search failed'); setLoading(false); return }
 
-    if (!res.ok) {
-      setError(json.error ?? 'Search failed')
-      setLoading(false)
-      return
-    }
-
-    // Get signed URLs for all result images
     const paths = json.results.map(r => r.storage_path)
     const { data: urlData } = paths.length
       ? await supabase.storage.from('media').createSignedUrls(paths, 3600)
       : { data: [] }
-
     const urlMap = Object.fromEntries((urlData ?? []).map(u => [u.path, u.signedUrl]))
 
     setResults(json.results.map(r => ({ ...r, url: urlMap[r.storage_path] })))
@@ -45,31 +83,33 @@ export default function SearchBar({ eventId }) {
 
   return (
     <div>
-      <form onSubmit={handleSearch}>
-        <input
+      <SearchForm onSubmit={handleSearch}>
+        <Input
           placeholder={eventId ? 'Search this event…' : 'Search all your photos…'}
           value={query}
           onChange={e => setQuery(e.target.value)}
         />
-        <button type="submit" disabled={loading}>{loading ? 'Searching…' : 'Search'}</button>
-      </form>
+        <PrimaryButton type="submit" disabled={loading}>
+          <Search />
+          {loading ? 'Searching…' : 'Search'}
+        </PrimaryButton>
+      </SearchForm>
 
-      {error && <p>{error}</p>}
-
-      {results !== null && results.length === 0 && <p>No results found.</p>}
+      {error && <ErrorMsg style={{ marginTop: '8px' }}>{error}</ErrorMsg>}
+      {results !== null && results.length === 0 && <MutedText style={{ marginTop: '8px' }}>No results found.</MutedText>}
 
       {results && results.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '12px' }}>
+        <ResultsGrid>
           {results.map(r => (
-            <div key={r.media_id} onClick={() => setSelected(r)} style={{ cursor: 'pointer' }}>
+            <Thumbnail key={r.media_id} onClick={() => setSelected(r)}>
               {r.type === 'photo'
-                ? <img src={r.url} alt={r.caption ?? ''} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover' }} />
-                : <video src={r.url} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover' }} />
+                ? <img src={r.url} alt={r.caption ?? ''} />
+                : <video src={r.url} />
               }
-              {!eventId && <p style={{ margin: '2px 0', fontSize: '0.8em' }}>{r.event_name}</p>}
-            </div>
+              {!eventId && <EventLabel>{r.event_name}</EventLabel>}
+            </Thumbnail>
           ))}
-        </div>
+        </ResultsGrid>
       )}
 
       {selected && (

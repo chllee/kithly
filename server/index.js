@@ -29,16 +29,29 @@ async function describeImage(imageBase64, mimeType) {
         contents: [{
           role: 'user',
           parts: [
-            { text: 'Describe this photo in 2-3 sentences. Focus on what is happening, who or what is in the photo, the setting, and the mood. Be specific and descriptive.' },
+            {
+              text: 'Analyse this photo and return a JSON object with two fields: "description" (2-3 sentences covering what is happening, who or what is in the photo, the setting, and the mood) and "tags" (an array of 5-10 short lowercase tags — nouns, adjectives, or activities that describe the photo content).',
+            },
             { inlineData: { mimeType, data: imageBase64 } },
           ],
         }],
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: 'object',
+            properties: {
+              description: { type: 'string' },
+              tags: { type: 'array', items: { type: 'string' } },
+            },
+            required: ['description', 'tags'],
+          },
+        },
       })
       console.log(`Vision model used: ${model}`)
-      return result.text
+      return JSON.parse(result.text)
     } catch (err) {
       const status = err?.errorDetails?.[0]?.reason ?? err?.message ?? ''
-      if (status.includes('503') || status.includes('UNAVAILABLE') || status.includes('503')) {
+      if (status.includes('503') || status.includes('UNAVAILABLE')) {
         console.warn(`${model} unavailable, trying next…`)
         lastError = err
         continue
@@ -85,24 +98,30 @@ app.post('/process-media', async (req, res) => {
   const imageBase64 = Buffer.from(imageBuffer).toString('base64')
   const mimeType = imageResponse.headers.get('content-type') ?? 'image/jpeg'
 
-  const description = await describeImage(imageBase64, mimeType)
+  const { description, tags: aiTags } = await describeImage(imageBase64, mimeType)
 
-  const tags = media.media_tags.map(t => t.tag).join(', ')
+  const userTags = media.media_tags.map(t => t.tag).join(', ')
   const embeddingInput = [
     description,
     media.caption ? `Caption: ${media.caption}` : null,
-    tags ? `Tags: ${tags}` : null,
+    userTags ? `Tags: ${userTags}` : null,
   ].filter(Boolean).join('\n')
 
   const embedding = await embedText(embeddingInput)
 
-  const { error: insertError } = await supabase
-    .from('media_embeddings')
-    .upsert({ media_id: mediaId, embedding, model: 'gemini-embedding-001' })
+  const [{ error: embedError }, { error: aiTagsError }] = await Promise.all([
+    supabase
+      .from('media_embeddings')
+      .upsert({ media_id: mediaId, embedding, model: 'gemini-embedding-001' }),
+    supabase
+      .from('media_ai_tags')
+      .upsert(aiTags.map(tag => ({ media_id: mediaId, tag })), { onConflict: 'media_id,tag' }),
+  ])
 
-  if (insertError) return res.status(500).json({ error: insertError.message })
+  if (embedError) return res.status(500).json({ error: embedError.message })
+  if (aiTagsError) return res.status(500).json({ error: aiTagsError.message })
 
-  res.json({ success: true, description })
+  res.json({ success: true, description, aiTags })
 })
 
 app.post('/reprocess-all', async (req, res) => {

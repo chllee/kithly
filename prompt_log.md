@@ -89,3 +89,23 @@ Each entry captures the prompt, what was done, and any key decisions made.
 **Action:** Fixed bug in `/reprocess-all` — the Supabase JS `.not('id', 'in', '(select ...)')` call treats the string as a literal UUID, not SQL. Fixed by first fetching all existing `media_embeddings` media_ids, then building the exclusion filter from an actual array. Also added HTTP response status checking to the background reprocess loop so errors from `/process-media` are surfaced in the server logs rather than silently swallowed.
 
 ---
+
+## Session 4 — 2026-05-13
+
+### Entry 19
+**Prompt:** "where did we stop in this build"
+**Action:** Surveyed git log, project tree, `feature_changes.md`, and `prompt_log.md`. Confirmed last commit `941f374` ("main features mostly built in. frontend styling not yet done") is clean on `main`. Summarised end-of-Session-3 state: schema deployed, auth working, groups/events UI live, media upload pipeline operational, AI layer (vision + 3072-dim embeddings + semantic search) running on Express port 3001.
+
+### Entry 20
+**Prompt:** "what is the next step or phase left to implement, disregard styling for now"
+**Action:** Compared current build against the original `family_friends_memories_app.txt` spec. Identified two remaining feature gaps: (1) **Memory feed** (spec item #5, "chronological or curated view of group memories") — not yet built; media is currently only viewable inside an event. (2) **AI auto-tagging surfaced in the UI** (spec item #3) — vision description is generated for embedding purposes only, never written to `media_tags`. Recommended memory feed first (no schema changes, exercises existing RLS plumbing); auto-tagging second (requires schema decision on AI-vs-user tag distinction + reprocess pass).
+
+### Entry 21
+**Prompt:** "ok let's work on the memory feed first"
+**Action:** Aligned on three v1 design choices: new `/feed` route in Nav (chosen over replacing EventsPage or appending to `/`); grouped by event with newest-event first (chosen over flat chronological or grouped-by-date); no filters in v1. Built `src/pages/FeedPage.jsx` — queries `media` with `events!inner(...)` join (RLS scopes results to events the user belongs to), batch-creates signed URLs in one call, groups results by `event_id`, sorts groups by `event.start_date` desc. Each event renders a section header linked back to its `EventPage`, then the same 3-column grid as `MediaGrid`. Reuses the existing `MediaItem` modal on click. Added `/feed` route in `App.jsx` and a "Feed" link in `Nav.jsx` between Events and Groups.
+
+### Entry 22
+**Prompt:** "do the smoke test"
+**Action:** Ran `npm install` (no `node_modules` in this checkout) — 281 packages installed. `npm run build` clean: 99 modules transformed in 886ms, no errors. `npm run lint` showed 52 pre-existing errors in other files (all `react/prop-types`) and **zero new errors** from the three changed files. Started Vite dev server — boot 114ms, `GET /` and `GET /feed` both returned 200 (SPA fallback), `FeedPage.jsx` transformed cleanly through Vite's React plugin (16KB output, no parse errors). Caveat flagged: no `.env` present in this checkout (only `.env.example`), so live Supabase calls would fail at runtime until env is restored — visual rendering and the `events!inner(...)` relationship against the live schema were not browser-verified.
+
+---

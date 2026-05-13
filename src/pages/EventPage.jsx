@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import styled from 'styled-components'
+import { CalendarDays, MapPin, Crown, User } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import Nav from '../components/Nav'
@@ -7,6 +9,63 @@ import InviteMember from '../components/InviteMember'
 import MediaUpload from '../components/MediaUpload'
 import MediaGrid from '../components/MediaGrid'
 import SearchBar from '../components/SearchBar'
+import { PageWrapper, GlassCard, PageTitle, SectionTitle, MutedText } from '../components/ui'
+
+const EventHeader = styled(GlassCard)`
+  margin-bottom: ${({ theme }) => theme.spacing.xl};
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.sm};
+`
+
+const EventMeta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: ${({ theme }) => theme.font.sizeSm};
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+`
+
+const Section = styled(GlassCard)`
+  margin-bottom: ${({ theme }) => theme.spacing.lg};
+`
+
+const SectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+`
+
+const MemberList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${({ theme }) => theme.spacing.sm};
+`
+
+const MemberChip = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(255, 248, 230, 0.2);
+  border: ${({ theme }) => theme.glass.border};
+  border-radius: ${({ theme }) => theme.radius.full};
+  color: ${({ theme }) => theme.colors.textLight};
+  font-size: ${({ theme }) => theme.font.sizeSm};
+  font-weight: ${({ theme }) => theme.font.weightSemibold};
+
+  svg {
+    width: 14px;
+    height: 14px;
+    color: ${({ $admin, theme }) => $admin ? '#FFD700' : theme.colors.textMuted};
+  }
+`
 
 export default function EventPage() {
   const { id } = useParams()
@@ -23,9 +82,7 @@ export default function EventPage() {
       supabase.from('events').select('*').eq('id', id).single(),
       supabase.from('event_members').select('role, user_id, users(first_name, last_name, email)').eq('event_id', id),
     ])
-
     if (eventError) { navigate('/'); return }
-
     setEvent(eventData)
     setMembers(memberData ?? [])
     setIsAdmin(memberData?.some(m => m.user_id === session.user.id && m.role === 'admin') ?? false)
@@ -34,29 +91,50 @@ export default function EventPage() {
 
   useEffect(() => { loadEvent() }, [id])
 
-  if (loading) return <><Nav /><p>Loading…</p></>
+  if (loading) return <><Nav /><PageWrapper><MutedText>Loading…</MutedText></PageWrapper></>
 
   return (
-    <div>
+    <>
       <Nav />
-      <h1>{event.name}</h1>
-      <p>{event.start_date}{event.end_date && event.end_date !== event.start_date ? ` – ${event.end_date}` : ''}</p>
-      {event.location && <p>{event.location}</p>}
+      <PageWrapper>
+        <EventHeader>
+          <PageTitle>{event.name}</PageTitle>
+          <EventMeta>
+            <CalendarDays />
+            {event.start_date}{event.end_date && event.end_date !== event.start_date ? ` – ${event.end_date}` : ''}
+          </EventMeta>
+          {event.location && (
+            <EventMeta>
+              <MapPin />
+              {event.location}
+            </EventMeta>
+          )}
+        </EventHeader>
 
-      <h2>Members</h2>
-      <ul>
-        {members.map(m => (
-          <li key={m.user_id}>
-            {m.users.first_name} {m.users.last_name} ({m.users.email}) — {m.role}
-          </li>
-        ))}
-      </ul>
-      {isAdmin && <InviteMember eventId={id} onInvited={loadEvent} />}
+        <Section>
+          <SectionHeader>
+            <SectionTitle>Members</SectionTitle>
+          </SectionHeader>
+          <MemberList>
+            {members.map(m => (
+              <MemberChip key={m.user_id} $admin={m.role === 'admin'}>
+                {m.role === 'admin' ? <Crown /> : <User />}
+                {m.users.first_name} {m.users.last_name}
+              </MemberChip>
+            ))}
+          </MemberList>
+          {isAdmin && <InviteMember eventId={id} onInvited={loadEvent} />}
+        </Section>
 
-      <h2>Media</h2>
-      <MediaUpload eventId={id} onUploaded={() => setMediaRefresh(r => r + 1)} />
-      <SearchBar eventId={id} />
-      <MediaGrid eventId={id} refresh={mediaRefresh} />
-    </div>
+        <Section>
+          <SectionHeader>
+            <SectionTitle>Photos &amp; Videos</SectionTitle>
+          </SectionHeader>
+          <MediaUpload eventId={id} onUploaded={() => setMediaRefresh(r => r + 1)} />
+          <SearchBar eventId={id} />
+          <MediaGrid eventId={id} refresh={mediaRefresh} />
+        </Section>
+      </PageWrapper>
+    </>
   )
 }

@@ -92,6 +92,16 @@ Tracks features confirmed, deferred, or ruled out during planning. For use in th
 | Event member invite | Admin-only | Only event admins can invite new members; enforced in UI and by RLS |
 | Groups page layout | Inline expand (no separate route) | Groups are simple lists; a full page per group is unnecessary for prototype |
 
+## Memory Feed
+
+| Feature | Decision | Reason |
+|---|---|---|
+| Route placement | New `/feed` route in Nav | Cleanest separation: `EventsPage` stays as the events list, feed has its own page. Considered replacing `/` with the feed (Instagram-style) or appending below the events list; both judged either too aggressive or too cluttered |
+| Ordering | Grouped by event, newest event first | More structured than a flat chronological stream; less abstract than a date-grouped view; lets users jump back into an event from the section header |
+| v1 filters | None | Ship the minimum viable feed first; favourites toggle, per-event filter, and photo/video toggle all deferred until the feed is in use and a real filtering need surfaces |
+| Empty events | Skipped | Events with no media don't render a section — querying `media` first (with `events!inner`) naturally excludes them, and prevents the feed from filling up with empty headers |
+| Reuse of `MediaItem` modal | Confirmed | Clicking a feed thumbnail opens the same modal used in `EventPage`/`MediaGrid` — favourites, tags, and comments all work consistently across surfaces |
+
 ## AI Layer
 
 | Feature | Decision | Reason |
@@ -103,8 +113,18 @@ Tracks features confirmed, deferred, or ruled out during planning. For use in th
 | Embedding generation timing | Fire-and-forget after upload | Upload returns immediately; embedding runs in background so the user isn't blocked waiting for AI processing |
 | `/reprocess-all` endpoint | Confirmed | Retroactively embeds photos that were uploaded before the AI pipeline was in place, or that failed during earlier debugging |
 | HNSW index | Dropped for prototype | pgvector HNSW supports max 2000 dimensions; 3072 exceeds this limit. Exact sequential scan is used instead — acceptable performance for a small prototype dataset |
-| Similarity threshold | 0.3 cosine similarity minimum | Filters out results that are semantically unrelated to the query; prevents noise in search results |
+| Similarity threshold | 0.3 cosine similarity minimum — **pending increase** | 0.3 is too loose in practice: all 4 test photos (girl, puppy, 2 giraffes) were returned for queries like "dog", "girl", "animal". User to update both `search_media` and `search_media_in_event` SQL functions in Supabase. Suggested range: 0.5–0.55. Must be updated in both functions to stay consistent. |
 | Search scope | Global (all events) or per-event | `search_media` covers all events the user belongs to; `search_media_in_event` scopes to a single event; UI exposes both depending on context |
 | Bulk upload | Deferred | Current uploader handles one file at a time; multi-file support to be revisited if time permits |
+
+## AI Auto-Tagging
+
+| Feature | Decision | Reason |
+|---|---|---|
+| AI tags storage | Separate `media_ai_tags` table (no `user_id`) | Mirrors production pattern — AI-generated and user-generated tags are distinct data sources; separate table avoids an `is_ai` flag polluting `media_tags` |
+| Tag generation timing | On new `/process-media` calls only | Existing media will be wiped when needed; no retroactive reprocessing pass required for now |
+| Tag generation method | Single Gemini vision call returning JSON `{description, tags}` | Combines description + tags in one API call rather than two, using `responseMimeType: application/json` with a response schema |
+| Tag count | 5–10 per photo | Instructed in prompt; model chooses based on content richness |
+| UI placement | Read-only "AI Tags" section below "Your Tags" in MediaItem modal | Kept visually separate from user tags; no add/remove controls since AI tags are not user-editable |
 
 ---

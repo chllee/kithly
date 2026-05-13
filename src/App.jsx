@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import styled from 'styled-components'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp'
@@ -7,6 +8,13 @@ import EventsPage from './pages/EventsPage'
 import EventPage from './pages/EventPage'
 import CreateEventPage from './pages/CreateEventPage'
 import GroupsPage from './pages/GroupsPage'
+import FeedPage from './pages/FeedPage'
+
+const AppBackground = styled.div`
+  min-height: 100vh;
+  background: ${({ theme }) => theme.colors.bgGradient};
+  background-attachment: fixed;
+`
 
 function AuthRoutes() {
   const [showSignUp, setShowSignUp] = useState(false)
@@ -25,6 +33,7 @@ function AppRoutes() {
       <Route path="/events/new" element={<CreateEventPage />} />
       <Route path="/events/:id" element={<EventPage />} />
       <Route path="/groups" element={<GroupsPage />} />
+      <Route path="/feed" element={<FeedPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
@@ -34,7 +43,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <AppBackground>
+          <AppRoutes />
+        </AppBackground>
       </AuthProvider>
     </BrowserRouter>
   )

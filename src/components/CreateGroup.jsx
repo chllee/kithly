@@ -1,6 +1,14 @@
 import { useState } from 'react'
+import styled from 'styled-components'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { Input, PrimaryButton, ErrorMsg } from './ui'
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.md};
+`
 
 export default function CreateGroup({ onCreated }) {
   const { session } = useAuth()
@@ -12,31 +20,30 @@ export default function CreateGroup({ onCreated }) {
     e.preventDefault()
     setLoading(true)
     setError(null)
-
     const { error } = await supabase
       .from('groups')
       .insert({ name: name.trim(), created_by: session.user.id })
-
     if (error) {
       setError(error.message)
     } else {
       setName('')
       onCreated()
     }
-
     setLoading(false)
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        placeholder="New group name"
+    <Form onSubmit={handleSubmit}>
+      <Input
+        placeholder="Group name (e.g. Family, School Friends)"
         value={name}
         onChange={e => setName(e.target.value)}
         required
       />
-      {error && <p>{error}</p>}
-      <button type="submit" disabled={loading}>{loading ? 'Creating…' : 'Create group'}</button>
-    </form>
+      {error && <ErrorMsg>{error}</ErrorMsg>}
+      <PrimaryButton type="submit" disabled={loading}>
+        {loading ? 'Creating…' : 'Create Group'}
+      </PrimaryButton>
+    </Form>
   )
 }
