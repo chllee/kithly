@@ -18,8 +18,8 @@ const FileLabel = styled.label`
   align-items: center;
   gap: ${({ theme }) => theme.spacing.sm};
   padding: 12px ${({ theme }) => theme.spacing.md};
-  background: rgba(255, 248, 230, 0.15);
-  border: 2px dashed rgba(255, 248, 230, 0.4);
+  background: ${({ theme }) => theme.colors.bg};
+  border: 2px dashed ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radius.md};
   color: ${({ theme }) => theme.colors.textMuted};
   font-size: ${({ theme }) => theme.font.sizeSm};
@@ -27,9 +27,8 @@ const FileLabel = styled.label`
   transition: ${({ theme }) => theme.transition};
 
   &:hover {
-    background: rgba(255, 248, 230, 0.22);
-    border-color: rgba(255, 248, 230, 0.6);
-    color: ${({ theme }) => theme.colors.textLight};
+    border-color: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }) => theme.colors.primary};
   }
 
   svg { width: 18px; height: 18px; flex-shrink: 0; }
@@ -38,7 +37,7 @@ const FileLabel = styled.label`
 `
 
 const FileName = styled.span`
-  color: ${({ theme }) => theme.colors.textLight};
+  color: ${({ theme }) => theme.colors.textDark};
   font-weight: ${({ theme }) => theme.font.weightSemibold};
 `
 

@@ -2,34 +2,13 @@ import { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { supabase } from '../lib/supabase'
 import MediaItem from './MediaItem'
-import { MutedText } from './ui'
+import { PhotoCard, MutedText } from './ui'
 
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  border-radius: ${({ theme }) => theme.radius.lg};
-  overflow: hidden;
+  gap: ${({ theme }) => theme.spacing.md};
   margin-top: ${({ theme }) => theme.spacing.md};
-`
-
-const Thumbnail = styled.div`
-  aspect-ratio: 1;
-  cursor: pointer;
-  overflow: hidden;
-
-  &:hover img,
-  &:hover video {
-    transform: scale(1.05);
-  }
-
-  img, video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform 0.3s ease;
-  }
 `
 
 export default function MediaGrid({ eventId, refresh }) {
@@ -65,12 +44,12 @@ export default function MediaGrid({ eventId, refresh }) {
     <>
       <Grid>
         {items.map(item => (
-          <Thumbnail key={item.id} onClick={() => setSelected(item)}>
+          <PhotoCard key={item.id} onClick={() => setSelected(item)}>
             {item.type === 'photo'
               ? <img src={item.url} alt={item.caption ?? ''} />
               : <video src={item.url} />
             }
-          </Thumbnail>
+          </PhotoCard>
         ))}
       </Grid>
       {selected && <MediaItem item={selected} onClose={() => setSelected(null)} />}

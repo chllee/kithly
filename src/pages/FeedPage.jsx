@@ -5,7 +5,12 @@ import { CalendarDays, MapPin } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import Nav from '../components/Nav'
 import MediaItem from '../components/MediaItem'
-import { PageWrapper, PageTitle, GlassCard, MutedText } from '../components/ui'
+import SearchBar from '../components/SearchBar'
+import { PageWrapper, PageTitle, GlassCard, PhotoCard, MutedText } from '../components/ui'
+
+const SearchSection = styled(GlassCard)`
+  margin-bottom: ${({ theme }) => theme.spacing.xl};
+`
 
 const EventSection = styled.div`
   margin-bottom: ${({ theme }) => theme.spacing.xxl};
@@ -23,8 +28,8 @@ const EventHeader = styled(GlassCard)`
 const EventLink = styled(Link)`
   font-size: ${({ theme }) => theme.font.sizeLg};
   font-weight: ${({ theme }) => theme.font.weightBold};
-  color: ${({ theme }) => theme.colors.textLight};
-  &:hover { text-decoration: underline; }
+  color: ${({ theme }) => theme.colors.textDark};
+  &:hover { color: ${({ theme }) => theme.colors.primary}; }
 `
 
 const EventMeta = styled.div`
@@ -49,29 +54,7 @@ const MetaItem = styled.span`
 const PhotoGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  border-radius: ${({ theme }) => theme.radius.lg};
-  overflow: hidden;
-`
-
-const Thumbnail = styled.div`
-  aspect-ratio: 1;
-  cursor: pointer;
-  overflow: hidden;
-  position: relative;
-
-  &:hover img,
-  &:hover video {
-    transform: scale(1.05);
-  }
-
-  img, video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform 0.3s ease;
-  }
+  gap: ${({ theme }) => theme.spacing.md};
 `
 
 export default function FeedPage() {
@@ -113,7 +96,11 @@ export default function FeedPage() {
     <>
       <Nav />
       <PageWrapper>
-        <PageTitle style={{ marginBottom: '32px' }}>Memory Feed</PageTitle>
+        <PageTitle style={{ marginBottom: '24px' }}>Memory Feed</PageTitle>
+
+        <SearchSection>
+          <SearchBar />
+        </SearchSection>
 
         {loading && <MutedText>Loading…</MutedText>}
         {!loading && groups.length === 0 && (
@@ -140,12 +127,12 @@ export default function FeedPage() {
 
             <PhotoGrid>
               {items.map(item => (
-                <Thumbnail key={item.id} onClick={() => setSelected(item)}>
+                <PhotoCard key={item.id} onClick={() => setSelected(item)}>
                   {item.type === 'photo'
                     ? <img src={item.url} alt={item.caption ?? ''} />
                     : <video src={item.url} />
                   }
-                </Thumbnail>
+                </PhotoCard>
               ))}
             </PhotoGrid>
           </EventSection>

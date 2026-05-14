@@ -5,8 +5,6 @@ import { theme } from './theme'
 import App from './App.jsx'
 
 const GlobalStyle = createGlobalStyle`
-  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
-
   *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
@@ -20,6 +18,7 @@ const GlobalStyle = createGlobalStyle`
   body {
     font-family: ${({ theme }) => theme.font.family};
     font-size: ${({ theme }) => theme.font.sizeBase};
+    background: ${({ theme }) => theme.colors.bg};
     color: ${({ theme }) => theme.colors.textDark};
     -webkit-font-smoothing: antialiased;
   }

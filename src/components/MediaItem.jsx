@@ -9,27 +9,31 @@ const CloseBtn = styled.button`
   position: absolute;
   top: 12px;
   right: 12px;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: rgba(255, 248, 230, 0.2);
-  border: 1px solid rgba(255, 248, 230, 0.35);
-  color: ${({ theme }) => theme.colors.textLight};
+  background: ${({ theme }) => theme.colors.bg};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  color: ${({ theme }) => theme.colors.textMid};
   display: flex;
   align-items: center;
   justify-content: center;
   transition: ${({ theme }) => theme.transition};
   z-index: 1;
+  cursor: pointer;
 
-  &:hover { background: rgba(255, 248, 230, 0.35); }
+  &:hover {
+    background: ${({ theme }) => theme.colors.border};
+    color: ${({ theme }) => theme.colors.textDark};
+  }
 
-  svg { width: 16px; height: 16px; }
+  svg { width: 15px; height: 15px; }
 `
 
 const Media = styled.div`
   border-radius: ${({ theme }) => theme.radius.lg};
   overflow: hidden;
-  background: rgba(0,0,0,0.3);
+  background: #111;
   margin-bottom: ${({ theme }) => theme.spacing.md};
 
   img, video {
@@ -55,7 +59,7 @@ const MetaText = styled.p`
 `
 
 const Caption = styled.p`
-  color: ${({ theme }) => theme.colors.textLight};
+  color: ${({ theme }) => theme.colors.textDark};
   font-size: ${({ theme }) => theme.font.sizeBase};
   font-weight: ${({ theme }) => theme.font.weightSemibold};
   margin-bottom: ${({ theme }) => theme.spacing.sm};
@@ -67,21 +71,26 @@ const FavButton = styled.button`
   gap: 6px;
   padding: 7px 14px;
   border-radius: ${({ theme }) => theme.radius.md};
-  background: ${({ $active, theme }) => $active ? 'rgba(245, 166, 35, 0.3)' : theme.glass.background};
-  border: 1px solid ${({ $active }) => $active ? 'rgba(245, 166, 35, 0.6)' : 'rgba(255, 248, 230, 0.35)'};
-  color: ${({ $active, theme }) => $active ? '#F5A623' : theme.colors.textLight};
+  background: ${({ $active }) => $active ? 'rgba(255, 151, 26, 0.1)' : 'transparent'};
+  border: 1px solid ${({ $active }) => $active ? 'rgba(255, 151, 26, 0.4)' : '#E8E4DF'};
+  color: ${({ $active, theme }) => $active ? theme.colors.primary : theme.colors.textMid};
   font-size: ${({ theme }) => theme.font.sizeSm};
   font-weight: ${({ theme }) => theme.font.weightSemibold};
   transition: ${({ theme }) => theme.transition};
+  cursor: pointer;
 
-  &:hover { background: rgba(245, 166, 35, 0.2); }
+  &:hover {
+    background: rgba(255, 151, 26, 0.08);
+    border-color: rgba(255, 151, 26, 0.35);
+    color: ${({ theme }) => theme.colors.primary};
+  }
 
-  svg { width: 16px; height: 16px; }
+  svg { width: 15px; height: 15px; }
 `
 
 const Divider = styled.hr`
   border: none;
-  border-top: 1px solid rgba(255, 248, 230, 0.2);
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
   margin: ${({ theme }) => theme.spacing.md} 0;
 `
 
@@ -89,14 +98,14 @@ const SectionLabel = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  color: ${({ theme }) => theme.colors.textLight};
+  color: ${({ theme }) => theme.colors.textMid};
   font-weight: ${({ theme }) => theme.font.weightBold};
   font-size: ${({ theme }) => theme.font.sizeSm};
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: ${({ theme }) => theme.spacing.sm};
 
-  svg { width: 14px; height: 14px; }
+  svg { width: 13px; height: 13px; }
 `
 
 const TagsRow = styled.div`
@@ -112,16 +121,16 @@ const TagChip = styled.span`
   gap: 4px;
   padding: 4px 10px;
   border-radius: ${({ theme }) => theme.radius.full};
-  background: rgba(255, 248, 230, 0.18);
-  border: 1px solid rgba(255, 248, 230, 0.3);
-  color: ${({ theme }) => theme.colors.textLight};
+  background: ${({ theme }) => theme.colors.bg};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  color: ${({ theme }) => theme.colors.textMid};
   font-size: ${({ theme }) => theme.font.sizeSm};
 `
 
 const AiTagChip = styled(TagChip)`
-  background: rgba(196, 112, 79, 0.2);
-  border-color: rgba(196, 112, 79, 0.4);
-  color: #FFD8C0;
+  background: rgba(255, 151, 26, 0.08);
+  border-color: rgba(255, 151, 26, 0.3);
+  color: ${({ theme }) => theme.colors.primaryHover};
 `
 
 const RemoveTag = styled.button`
@@ -131,8 +140,9 @@ const RemoveTag = styled.button`
   font-size: 14px;
   line-height: 1;
   padding: 0 0 0 2px;
+  cursor: pointer;
 
-  &:hover { color: ${({ theme }) => theme.colors.textLight}; }
+  &:hover { color: ${({ theme }) => theme.colors.textDark}; }
 `
 
 const AddTagForm = styled.form`
@@ -149,20 +159,20 @@ const CommentList = styled.div`
 
 const CommentRow = styled.div`
   padding: 10px ${({ theme }) => theme.spacing.md};
-  background: rgba(255, 248, 230, 0.1);
+  background: ${({ theme }) => theme.colors.bg};
   border-radius: ${({ theme }) => theme.radius.md};
-  border: 1px solid rgba(255, 248, 230, 0.2);
+  border: 1px solid ${({ theme }) => theme.colors.border};
 `
 
 const CommentAuthor = styled.span`
   font-weight: ${({ theme }) => theme.font.weightBold};
-  color: ${({ theme }) => theme.colors.textLight};
+  color: ${({ theme }) => theme.colors.textDark};
   font-size: ${({ theme }) => theme.font.sizeSm};
   margin-right: 6px;
 `
 
 const CommentText = styled.span`
-  color: rgba(253, 248, 240, 0.85);
+  color: ${({ theme }) => theme.colors.textMid};
   font-size: ${({ theme }) => theme.font.sizeSm};
 `
 
@@ -177,8 +187,9 @@ const CommentActions = styled.div`
     background: none;
     border: none;
     padding: 2px 0;
+    cursor: pointer;
 
-    &:hover { color: ${({ theme }) => theme.colors.textLight}; }
+    &:hover { color: ${({ theme }) => theme.colors.primary}; }
   }
 `
 

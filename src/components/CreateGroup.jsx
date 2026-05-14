@@ -20,14 +20,16 @@ export default function CreateGroup({ onCreated }) {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('groups')
       .insert({ name: name.trim(), created_by: session.user.id })
+      .select('id, name')
+      .single()
     if (error) {
       setError(error.message)
     } else {
       setName('')
-      onCreated()
+      onCreated(data)
     }
     setLoading(false)
   }

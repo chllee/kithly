@@ -52,18 +52,18 @@ const MemberChip = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  background: rgba(255, 248, 230, 0.2);
-  border: ${({ theme }) => theme.glass.border};
+  padding: 5px 12px;
+  background: ${({ theme }) => theme.colors.bg};
+  border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radius.full};
-  color: ${({ theme }) => theme.colors.textLight};
+  color: ${({ theme }) => theme.colors.textMid};
   font-size: ${({ theme }) => theme.font.sizeSm};
   font-weight: ${({ theme }) => theme.font.weightSemibold};
 
   svg {
-    width: 14px;
-    height: 14px;
-    color: ${({ $admin, theme }) => $admin ? '#FFD700' : theme.colors.textMuted};
+    width: 13px;
+    height: 13px;
+    color: ${({ $admin }) => $admin ? '#ff971a' : '#A8A29E'};
   }
 `
 
@@ -82,7 +82,7 @@ export default function EventPage() {
       supabase.from('events').select('*').eq('id', id).single(),
       supabase.from('event_members').select('role, user_id, users(first_name, last_name, email)').eq('event_id', id),
     ])
-    if (eventError) { navigate('/'); return }
+    if (eventError) { navigate('/events'); return }
     setEvent(eventData)
     setMembers(memberData ?? [])
     setIsAdmin(memberData?.some(m => m.user_id === session.user.id && m.role === 'admin') ?? false)

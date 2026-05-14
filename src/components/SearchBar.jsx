@@ -4,7 +4,7 @@ import { Search } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import MediaItem from './MediaItem'
-import { Input, PrimaryButton, ErrorMsg, MutedText } from './ui'
+import { Input, PrimaryButton, ErrorMsg, MutedText, PhotoCard } from './ui'
 
 const SearchForm = styled.form`
   display: flex;
@@ -14,27 +14,12 @@ const SearchForm = styled.form`
 const ResultsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  border-radius: ${({ theme }) => theme.radius.lg};
-  overflow: hidden;
+  gap: ${({ theme }) => theme.spacing.md};
   margin-top: ${({ theme }) => theme.spacing.md};
 `
 
-const Thumbnail = styled.div`
-  aspect-ratio: 1;
-  cursor: pointer;
-  overflow: hidden;
+const PhotoCardWithLabel = styled(PhotoCard)`
   position: relative;
-
-  &:hover img, &:hover video { transform: scale(1.05); }
-
-  img, video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform 0.3s ease;
-  }
 `
 
 const EventLabel = styled.p`
@@ -42,9 +27,9 @@ const EventLabel = styled.p`
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 4px 6px;
-  background: rgba(45, 15, 10, 0.7);
-  color: rgba(253, 248, 240, 0.9);
+  padding: 5px 8px;
+  background: rgba(28, 25, 23, 0.6);
+  color: rgba(255, 255, 255, 0.92);
   font-size: ${({ theme }) => theme.font.sizeXs};
   font-weight: ${({ theme }) => theme.font.weightSemibold};
 `
@@ -101,13 +86,13 @@ export default function SearchBar({ eventId }) {
       {results && results.length > 0 && (
         <ResultsGrid>
           {results.map(r => (
-            <Thumbnail key={r.media_id} onClick={() => setSelected(r)}>
+            <PhotoCardWithLabel key={r.media_id} onClick={() => setSelected(r)}>
               {r.type === 'photo'
                 ? <img src={r.url} alt={r.caption ?? ''} />
                 : <video src={r.url} />
               }
               {!eventId && <EventLabel>{r.event_name}</EventLabel>}
-            </Thumbnail>
+            </PhotoCardWithLabel>
           ))}
         </ResultsGrid>
       )}

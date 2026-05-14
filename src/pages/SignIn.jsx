@@ -3,23 +3,22 @@ import styled from 'styled-components'
 import { supabase } from '../lib/supabase'
 
 const Screen = styled.div`
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: ${({ theme }) => theme.spacing.md};
+  background: ${({ theme }) => theme.colors.bg};
 `
 
 const Card = styled.div`
   width: 100%;
-  max-width: 420px;
+  max-width: 400px;
   padding: ${({ theme }) => theme.spacing.xxl} ${({ theme }) => theme.spacing.xl};
-  background: ${({ theme }) => theme.glass.backgroundStrong};
-  backdrop-filter: ${({ theme }) => theme.glass.backdrop};
-  -webkit-backdrop-filter: ${({ theme }) => theme.glass.backdrop};
-  border: ${({ theme }) => theme.glass.border};
-  border-radius: ${({ theme }) => theme.glass.borderRadius};
-  box-shadow: ${({ theme }) => theme.glass.shadowStrong};
+  background: ${({ theme }) => theme.colors.white};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.05);
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing.lg};
@@ -28,16 +27,15 @@ const Card = styled.div`
 const Wordmark = styled.h1`
   text-align: center;
   font-size: ${({ theme }) => theme.font.size2xl};
-  font-weight: ${({ theme }) => theme.font.weightExtrabold};
-  color: ${({ theme }) => theme.colors.textLight};
+  font-weight: ${({ theme }) => theme.font.weightBold};
+  color: ${({ theme }) => theme.colors.textDark};
   letter-spacing: -1px;
-  text-shadow: 0 2px 12px rgba(90, 20, 10, 0.4);
 `
 
 const Tagline = styled.p`
   text-align: center;
   color: ${({ theme }) => theme.colors.textMuted};
-  font-size: ${({ theme }) => theme.font.sizeMd};
+  font-size: ${({ theme }) => theme.font.sizeBase};
   margin-top: -${({ theme }) => theme.spacing.md};
 `
 
@@ -49,51 +47,53 @@ const Form = styled.form`
 
 const Input = styled.input`
   width: 100%;
-  padding: 14px ${({ theme }) => theme.spacing.md};
-  background: rgba(255, 248, 230, 0.25);
-  border: 1px solid rgba(255, 248, 230, 0.45);
+  padding: 12px ${({ theme }) => theme.spacing.md};
+  background: ${({ theme }) => theme.colors.white};
+  border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radius.md};
-  color: ${({ theme }) => theme.colors.textLight};
+  color: ${({ theme }) => theme.colors.textDark};
   font-size: ${({ theme }) => theme.font.sizeMd};
+  font-family: inherit;
   transition: ${({ theme }) => theme.transition};
   outline: none;
 
   &::placeholder {
-    color: rgba(253, 248, 240, 0.55);
+    color: ${({ theme }) => theme.colors.textMuted};
   }
 
   &:focus {
-    background: rgba(255, 248, 230, 0.35);
-    border-color: rgba(255, 248, 230, 0.7);
+    border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: 0 0 0 3px rgba(255, 151, 26, 0.12);
   }
 `
 
 const PrimaryButton = styled.button`
   width: 100%;
-  padding: 14px;
+  padding: 13px;
   background: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.textLight};
+  color: ${({ theme }) => theme.colors.white};
   font-size: ${({ theme }) => theme.font.sizeMd};
-  font-weight: ${({ theme }) => theme.font.weightBold};
+  font-weight: ${({ theme }) => theme.font.weightSemibold};
+  font-family: inherit;
   border-radius: ${({ theme }) => theme.radius.md};
-  box-shadow: 0 4px 16px rgba(90, 20, 10, 0.35);
+  border: none;
   transition: ${({ theme }) => theme.transition};
+  cursor: pointer;
 
   &:hover:not(:disabled) {
     background: ${({ theme }) => theme.colors.primaryHover};
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(90, 20, 10, 0.45);
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.55;
     cursor: not-allowed;
   }
 `
 
 const ErrorMsg = styled.p`
-  color: ${({ theme }) => theme.colors.error};
+  color: ${({ theme }) => theme.colors.errorText};
   background: ${({ theme }) => theme.colors.errorBg};
+  border: 1px solid rgba(220, 38, 38, 0.2);
   border-radius: ${({ theme }) => theme.radius.sm};
   padding: 10px ${({ theme }) => theme.spacing.md};
   font-size: ${({ theme }) => theme.font.sizeSm};
@@ -107,13 +107,18 @@ const SwitchRow = styled.p`
 `
 
 const SwitchButton = styled.button`
-  color: ${({ theme }) => theme.colors.textLight};
-  font-weight: ${({ theme }) => theme.font.weightBold};
+  color: ${({ theme }) => theme.colors.primary};
+  font-weight: ${({ theme }) => theme.font.weightSemibold};
   font-size: ${({ theme }) => theme.font.sizeSm};
-  text-decoration: underline;
   background: none;
   border: none;
   margin-left: 4px;
+  cursor: pointer;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.primaryHover};
+    text-decoration: underline;
+  }
 `
 
 export default function SignIn({ onSwitch }) {

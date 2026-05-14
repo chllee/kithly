@@ -117,6 +117,25 @@ Tracks features confirmed, deferred, or ruled out during planning. For use in th
 | Search scope | Global (all events) or per-event | `search_media` covers all events the user belongs to; `search_media_in_event` scopes to a single event; UI exposes both depending on context |
 | Bulk upload | Deferred | Current uploader handles one file at a time; multi-file support to be revisited if time permits |
 
+## Contacts
+
+| Feature | Decision | Reason |
+|---|---|---|
+| Contacts as personal address book | Confirmed | Contacts are per-user, independent of groups. Groups are just one way to organise the address book. Mirrors how a phone contacts list works |
+| Storage | New `contacts` table (`owner_id`, `contact_id`, soft-delete column) with `unique(owner_id, contact_id)` and a single RLS policy "users manage own contacts" gating on `owner_id = auth.uid()` | Minimal schema for an address book; uniqueness constraint prevents duplicate adds; RLS keeps each user's address book private |
+| Lookup method | Email only (must be an existing Kithly user) | Simplest path for the prototype; no pending-invite or non-user flow required |
+| Phone / @id lookup | Deferred | Email is enough for the prototype |
+| Adding contacts into groups from the address book | Deferred | Groups continue to use direct email invite for now |
+| UI placement | `All My Contacts` modal as the first card on `GroupsPage` | Keeps the Groups page as the single hub for "people in my orbit"; contacts and groups live side-by-side without adding another route |
+| Group cards behaviour | Unchanged — open existing `GroupDetail` popup | Avoids regressing group membership flow while introducing the new contacts surface |
+| Remove contact | Soft delete (set `deleted_at`) | Consistent with the rest of the soft-deleted tables (`groups`, `events`, `media`, `group_members`); preserves the original `created_at` on the row |
+| Re-adding a removed contact | Restore the existing soft-deleted row (clear `deleted_at`) on duplicate-key | The `unique(owner_id, contact_id)` constraint would otherwise block re-adds; restoring keeps history continuous and avoids dropping the constraint |
+| Add Contact entry points | Two: standalone header button on `GroupsPage` AND inline form inside the "All My Contacts" modal | The standalone button is faster for one-off adds; the inline form is for users already managing their list |
+| Contact count surface | Rendered on the "All My Contacts" special card via `head: true, count: 'exact'` query | Cheap query, gives an at-a-glance sense of address-book size without opening the modal |
+| Contacts RLS policy | `for all` with **both** `using (owner_id = auth.uid())` and `with check (owner_id = auth.uid())` | The initial migration only had `using`, which silently blocked INSERTs (Postgres checks `using` against rows being read and `with check` against rows being written). Fixed with `alter policy ... with check (...)` after first insert failed |
+| Adding contacts into groups | Activated (previously deferred) — `GroupDetail` shows a checkbox list of the user's contacts (excluding existing members) with a single "Add Selected (N)" button that batch-inserts `group_members` rows | Email input remains the primary entry path; the checkbox list is the secondary bulk path requested for "adding multiple users to the same group at one time" |
+| New-group flow | Two-step: `CreateGroup` returns the new group, `GroupsPage` then auto-opens `GroupDetail` for it | Keeps a single source of truth for add-member logic in `GroupDetail`; avoids duplicating the staging/email/checkbox UI in `CreateGroup` |
+
 ## AI Auto-Tagging
 
 | Feature | Decision | Reason |

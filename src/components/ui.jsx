@@ -9,8 +9,6 @@ export const PageWrapper = styled.div`
 
 export const GlassCard = styled.div`
   background: ${({ theme }) => theme.glass.background};
-  backdrop-filter: ${({ theme }) => theme.glass.backdrop};
-  -webkit-backdrop-filter: ${({ theme }) => theme.glass.backdrop};
   border: ${({ theme }) => theme.glass.border};
   border-radius: ${({ theme }) => theme.glass.borderRadius};
   box-shadow: ${({ theme }) => theme.glass.shadow};
@@ -19,66 +17,68 @@ export const GlassCard = styled.div`
 
 export const PageTitle = styled.h1`
   font-size: ${({ theme }) => theme.font.sizeXl};
-  font-weight: ${({ theme }) => theme.font.weightExtrabold};
-  color: ${({ theme }) => theme.colors.textLight};
-  text-shadow: 0 2px 8px rgba(90, 20, 10, 0.3);
+  font-weight: ${({ theme }) => theme.font.weightBold};
+  color: ${({ theme }) => theme.colors.textDark};
+  letter-spacing: -0.5px;
 `
 
 export const SectionTitle = styled.h2`
   font-size: ${({ theme }) => theme.font.sizeLg};
   font-weight: ${({ theme }) => theme.font.weightBold};
-  color: ${({ theme }) => theme.colors.textLight};
+  color: ${({ theme }) => theme.colors.textDark};
 `
 
 export const Input = styled.input`
   width: 100%;
-  padding: 12px ${({ theme }) => theme.spacing.md};
-  background: rgba(255, 248, 230, 0.2);
-  border: 1px solid rgba(255, 248, 230, 0.4);
+  padding: 10px ${({ theme }) => theme.spacing.md};
+  background: ${({ theme }) => theme.colors.white};
+  border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radius.md};
-  color: ${({ theme }) => theme.colors.textLight};
+  color: ${({ theme }) => theme.colors.textDark};
   font-size: ${({ theme }) => theme.font.sizeBase};
+  font-family: inherit;
   transition: ${({ theme }) => theme.transition};
   outline: none;
 
   &::placeholder {
-    color: rgba(253, 248, 240, 0.5);
+    color: ${({ theme }) => theme.colors.textMuted};
   }
 
   &:focus {
-    background: rgba(255, 248, 230, 0.3);
-    border-color: rgba(255, 248, 230, 0.65);
+    border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: 0 0 0 3px rgba(255, 151, 26, 0.12);
   }
 `
 
 export const PrimaryButton = styled.button`
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 11px ${({ theme }) => theme.spacing.lg};
+  gap: 7px;
+  padding: 10px ${({ theme }) => theme.spacing.lg};
   background: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.textLight};
+  color: ${({ theme }) => theme.colors.white};
   font-size: ${({ theme }) => theme.font.sizeBase};
-  font-weight: ${({ theme }) => theme.font.weightBold};
+  font-weight: ${({ theme }) => theme.font.weightSemibold};
+  font-family: inherit;
   border-radius: ${({ theme }) => theme.radius.md};
-  box-shadow: 0 4px 14px rgba(90, 20, 10, 0.3);
+  border: none;
   transition: ${({ theme }) => theme.transition};
   white-space: nowrap;
+  cursor: pointer;
 
   &:hover:not(:disabled) {
     background: ${({ theme }) => theme.colors.primaryHover};
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(90, 20, 10, 0.4);
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.55;
     cursor: not-allowed;
   }
 
   svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
   }
 `
 
@@ -95,33 +95,38 @@ export const GhostButton = styled.button`
   align-items: center;
   gap: 6px;
   padding: 9px ${({ theme }) => theme.spacing.md};
-  background: ${({ theme }) => theme.glass.background};
-  color: ${({ theme }) => theme.colors.textLight};
+  background: ${({ theme }) => theme.colors.white};
+  color: ${({ theme }) => theme.colors.textDark};
   font-size: ${({ theme }) => theme.font.sizeSm};
   font-weight: ${({ theme }) => theme.font.weightSemibold};
+  font-family: inherit;
   border-radius: ${({ theme }) => theme.radius.md};
-  border: ${({ theme }) => theme.glass.border};
+  border: 1px solid ${({ theme }) => theme.colors.border};
   transition: ${({ theme }) => theme.transition};
   white-space: nowrap;
+  cursor: pointer;
 
   &:hover:not(:disabled) {
-    background: ${({ theme }) => theme.glass.backgroundStrong};
+    background: ${({ theme }) => theme.colors.bg};
+    border-color: #CFC9C2;
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.55;
     cursor: not-allowed;
   }
 
   svg {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
   }
 `
 
 export const ErrorMsg = styled.p`
-  color: ${({ theme }) => theme.colors.error};
+  color: ${({ theme }) => theme.colors.errorText};
   background: ${({ theme }) => theme.colors.errorBg};
+  border: 1px solid rgba(220, 38, 38, 0.2);
   border-radius: ${({ theme }) => theme.radius.sm};
   padding: 10px ${({ theme }) => theme.spacing.md};
   font-size: ${({ theme }) => theme.font.sizeSm};
@@ -149,7 +154,6 @@ export const ModalOverlay = styled.div`
   justify-content: center;
   z-index: 100;
   padding: ${({ theme }) => theme.spacing.md};
-  backdrop-filter: blur(4px);
 `
 
 export const ModalCard = styled(GlassCard)`
@@ -158,7 +162,6 @@ export const ModalCard = styled(GlassCard)`
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
-  background: ${({ theme }) => theme.glass.backgroundStrong};
   box-shadow: ${({ theme }) => theme.glass.shadowStrong};
 `
 
@@ -166,19 +169,50 @@ export const CloseButton = styled.button`
   position: absolute;
   top: ${({ theme }) => theme.spacing.md};
   right: ${({ theme }) => theme.spacing.md};
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: ${({ theme }) => theme.radius.full};
-  background: rgba(255, 248, 230, 0.2);
-  border: ${({ theme }) => theme.glass.border};
-  color: ${({ theme }) => theme.colors.textLight};
+  background: ${({ theme }) => theme.colors.bg};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  color: ${({ theme }) => theme.colors.textMid};
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 16px;
+  line-height: 1;
+  transition: ${({ theme }) => theme.transition};
+  cursor: pointer;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.border};
+    color: ${({ theme }) => theme.colors.textDark};
+  }
+`
+
+export const PhotoCard = styled.div`
+  background: ${({ theme }) => theme.colors.white};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radius.lg};
+  overflow: hidden;
+  box-shadow: ${({ theme }) => theme.glass.shadow};
+  cursor: pointer;
   transition: ${({ theme }) => theme.transition};
 
   &:hover {
-    background: rgba(255, 248, 230, 0.35);
+    box-shadow: ${({ theme }) => theme.glass.shadowStrong};
+    transform: translateY(-2px);
+  }
+
+  img, video {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover img,
+  &:hover video {
+    transform: scale(1.04);
   }
 `

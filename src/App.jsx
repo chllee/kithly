@@ -12,8 +12,7 @@ import FeedPage from './pages/FeedPage'
 
 const AppBackground = styled.div`
   min-height: 100vh;
-  background: ${({ theme }) => theme.colors.bgGradient};
-  background-attachment: fixed;
+  background: ${({ theme }) => theme.colors.bg};
 `
 
 function AuthRoutes() {
@@ -29,12 +28,13 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<EventsPage />} />
+      <Route path="/" element={<Navigate to="/feed" replace />} />
+      <Route path="/feed" element={<FeedPage />} />
+      <Route path="/events" element={<EventsPage />} />
       <Route path="/events/new" element={<CreateEventPage />} />
       <Route path="/events/:id" element={<EventPage />} />
       <Route path="/groups" element={<GroupsPage />} />
-      <Route path="/feed" element={<FeedPage />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/feed" replace />} />
     </Routes>
   )
 }

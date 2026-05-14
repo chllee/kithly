@@ -18,11 +18,11 @@ const Label = styled.label`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing.sm};
-  color: ${({ theme }) => theme.colors.textLight};
+  color: ${({ theme }) => theme.colors.textMid};
   font-size: ${({ theme }) => theme.font.sizeSm};
   font-weight: ${({ theme }) => theme.font.weightSemibold};
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
 `
 
 const ButtonRow = styled.div`
@@ -92,7 +92,7 @@ export default function CreateEventPage() {
               <PrimaryButton type="submit" disabled={loading}>
                 {loading ? 'Creating…' : 'Create Event'}
               </PrimaryButton>
-              <GhostButton type="button" onClick={() => navigate('/')}>Cancel</GhostButton>
+              <GhostButton type="button" onClick={() => navigate('/events')}>Cancel</GhostButton>
             </ButtonRow>
           </form>
         </FormCard>

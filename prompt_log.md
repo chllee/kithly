@@ -109,3 +109,39 @@ Each entry captures the prompt, what was done, and any key decisions made.
 **Action:** Ran `npm install` (no `node_modules` in this checkout) — 281 packages installed. `npm run build` clean: 99 modules transformed in 886ms, no errors. `npm run lint` showed 52 pre-existing errors in other files (all `react/prop-types`) and **zero new errors** from the three changed files. Started Vite dev server — boot 114ms, `GET /` and `GET /feed` both returned 200 (SPA fallback), `FeedPage.jsx` transformed cleanly through Vite's React plugin (16KB output, no parse errors). Caveat flagged: no `.env` present in this checkout (only `.env.example`), so live Supabase calls would fail at runtime until env is restored — visual rendering and the `events!inner(...)` relationship against the live schema were not browser-verified.
 
 ---
+
+## Session 6 — 2026-05-14 (Contacts feature)
+
+### Entry 23
+**Prompt:** "where were we"
+**Action:** Surveyed memory and reported Contacts feature (Phase 9) is in progress: concept agreed (contacts = personal address book independent of groups; groups organise contacts), `contacts` table SQL migration drafted but not yet run, frontend not yet written.
+
+### Entry 24
+**Prompt:** "what is the sql migration to run again?"
+**Action:** Re-printed the `contacts` table migration: `id`, `owner_id` (FK to `users.id`, cascade), `contact_id` (FK to `users.id`, cascade), `created_at`, `deleted_at`, `unique(owner_id, contact_id)`. RLS enabled with single policy "users manage own contacts" gating on `owner_id = auth.uid()`.
+
+### Entry 25
+**Prompt:** "the migration has been run"
+**Action:** Rewired `GroupsPage` All Contacts modal to use the new `contacts` table instead of deriving from `group_members`. Added: `loadAllContacts` queries `contacts` joined to `users` via `contact_id` FK, ordered by `created_at` desc; `handleAddContact` form looks up user by lowercased trimmed email and inserts a contacts row (with self-add guard and 23505 unique-violation handling for "already in your contacts"); `handleRemoveContact` deletes the row scoped by `owner_id` + `contact_id`. Renamed card to "All My Contacts" per spec. Group cards still open the existing `GroupDetail` popup (unchanged).
+
+### Entry 26
+**Prompt:** "1 - is the remove contact a hard delete or soft delete? 2 - users should be able to add a new contact directly from the groups page instead of needing to open the view all contacts card. 3 - what else have we missed out"
+**Action:** Reported that remove was a hard delete (inconsistent with the rest of the soft-deleted tables) and the `deleted_at` column was unused. Flagged remaining gaps: standalone Add Contact button missing from page header, no contact-count surfaced on the special card, search similarity threshold still pending, group-invites-via-contacts still deferred, browser smoke not yet done.
+
+### Entry 27
+**Prompt:** "1 - yes implement the soft delete + filter. 2 - add the button and modal. 3 - sure add that too. 4 - we will work on group invites through the contact list later. 5 - search threshold was manually updated by myself already. any questions?"
+**Action:** Raised the re-add-after-remove edge case: with `unique(owner_id, contact_id)` + soft delete, re-adding a removed contact will hit 23505 on insert because the soft-deleted row is still present. Proposed restoring the existing row by clearing `deleted_at` on duplicate-key error, preserving the original `created_at`. Also noted that search threshold was manually updated by user — no follow-up action needed on prototype side.
+
+### Entry 28
+**Prompt:** "sure let's go with A"
+**Action:** Implemented round-2 contact changes on `GroupsPage`. (1) **Soft delete:** `handleRemoveContact` now updates `deleted_at = now()` scoped to the active row (`is('deleted_at', null)`) instead of deleting. (2) **Restore-on-re-add:** factored a shared `addContactByEmail` helper used by both the inline modal form and a new standalone modal. On 23505, the helper fetches the existing row; if `deleted_at` is non-null it clears it (restore), else returns "Already in your contacts." (3) **Standalone Add Contact:** new accent button in the page header (next to "Add New Group") opens a small modal with the email form; on success the modal closes and the contact count refreshes. (4) **Contact count badge:** new `loadContactCount` (`head:true, count:'exact'`) runs on mount and after add/remove; rendered under the "All My Contacts" card name as "N contact[s]". Verified: `npx eslint src/pages/GroupsPage.jsx` clean (one pre-existing react-hooks/exhaustive-deps warning, matches the rest of the codebase), `npm run build` clean (1.42s, no errors).
+
+### Entry 29
+**Prompt:** "adding a contact gives me this error: new row violates row-level security policy for table 'contacts'"
+**Action:** Diagnosed: the original `contacts` migration's policy declared only a `using` clause. For `for all`, Postgres checks `using` on rows being read and `with check` on rows being written — without `with check`, INSERTs are denied. After a couple of dead-ends (`pg_policies` initially returned no rows; a subsequent re-query found the policy under `public.contacts` with `qual` set but `with_check` null), fixed with a single `alter policy "users manage own contacts" on contacts with check (owner_id = auth.uid());`. User confirmed re-verify showed both `qual` and `with_check` set, and adding a contact then succeeded.
+
+### Entry 30
+**Prompt:** "ok let's work on adding users to a group. when a user creates a new group or wants to add members to a group in their groups list, the text bar that allows users to type in the contact email should still be there at the top of the modal as a primary option. but the user's contact list should render with checkboxes next to them to indicate that the user wants to add them to the group. then there should be a button to allow for adding multiple users to the same group at one time."
+**Action:** Activated the previously deferred "add contacts to a group" feature. Asked one design clarification (single-modal vs two-step for the new-group flow); user chose two-step. Implementation: (1) `CreateGroup` now `.select('id, name').single()` on insert and passes the new group object through `onCreated(newGroup)`. (2) `GroupsPage` swaps the create modal for the existing `GroupDetail` modal by calling `setSelected(newGroup)` on create, so new groups land straight in member-management. (3) `GroupDetail` got a new "Add from your contacts" section under the existing email form: queries `contacts` (joined to `users` via `contact_id` FK), filters out users already in the group via a memberIds set, renders a checkbox list with a `Set<string>` of selected user_ids, and a single "Add Selected (N)" button that batch-inserts `group_members` rows. Empty states distinguish "no contacts yet" from "all your contacts are already in this group." Build clean (1.20s); lint errors are all pre-existing `react/prop-types` matching the rest of the codebase.
+
+---
