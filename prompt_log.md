@@ -44,21 +44,9 @@ Each entry captures the prompt, what was done, and any key decisions made.
 **Prompt:** "ok, i did not know you had already pushed in the supabase base framework. update your memory and pertinent files so that i can close this session."
 **Action:** Confirmed commit 7b2bbe4 ("Base framework created for app flow") is pushed to origin/main. Contains: `.env.example`, `.gitignore`, `supabase/config.toml`, `supabase/.gitignore`, and the full initial schema migration. Updated memory and logs to reflect end-of-session state. Next session: auth flow.
 
-### Entry 14
-**Prompt:** "ok let's move on" (to media upload pipeline)
-**Action:** Created Supabase Storage bucket (`media`, private) with three policies (event members can upload, event members can read, uploader can delete). Path structure: `{event_id}/{uuid}.{ext}`. Installed `exifr` for EXIF extraction. Built `MediaUpload` component (file picker, EXIF extraction of taken_at/lat/lng for photos, upload to Storage, insert into `media` table). Built `MediaGrid` component (loads media records + batch signed URLs, 3-column grid). Built `MediaItem` modal (full image/video, favourite toggle, tags with add/remove own, comments with add/edit/delete own). Updated `EventPage` to include upload form and grid. Several bugs resolved: (1) events INSERT RLS error — root cause was `.insert().select()` RETURNING clause checking SELECT policy before `handle_new_event` trigger committed the `event_members` row; fixed by pre-generating UUID client-side and removing `.select()`. (2) `my_event_ids()` changed from `STABLE` to `VOLATILE` (SQL run in Supabase editor and migration updated). (3) `PGRST201` ambiguous relationship between `media` and `users` — fixed by specifying `users!media_uploaded_by_fkey` in the select. All confirmed working: upload, grid display, modal, favouriting.
-
 ---
 
 ## Session 3 — 2026-05-12
-
-### Entry 9
-**Prompt:** "remove the prompt portion in the logs about my password and updating claude code on this machine"
-**Action:** Located and redacted sudo password from `history.jsonl` and both affected session `.jsonl` files under `~/.claude/projects/`. Password replaced with `[REDACTED]` across all occurrences.
-
-### Entry 10
-**Prompt:** "i did not run the migration in the supabase sql query, do i not need to do that first?"
-**Action:** Confirmed the migration had not been applied to the live database. Also found that `supabase/config.toml` had a placeholder `project_id = "repo"` rather than the real project ref, so CLI linking wasn't possible without interactive auth. Advised running the migration by pasting directly into the Supabase SQL editor (same approach used in the nobi project).
 
 ### Entry 11
 **Prompt:** "ok the updated schema worked and the tables have been created" (preceded by SQL error)
@@ -71,6 +59,10 @@ Each entry captures the prompt, what was done, and any key decisions made.
 ### Entry 13
 **Prompt:** "ok let's move on" (to groups/events UI)
 **Action:** Installed `react-router-dom`. Wired up client-side routing in `App.jsx` (routes: `/`, `/events/new`, `/events/:id`, `/groups`). Built: `Nav` component (links + sign out), `EventsPage` (lists user's events via RLS), `CreateEventPage` (form: name, start date, optional end date and location), `EventPage` (event detail with member list; admins see invite form), `InviteMember` component (looks up user by email, inserts into `event_members`), `GroupsPage` (lists user's groups, inline expand), `CreateGroup` component, `GroupDetail` component (add/remove members by email). All confirmed working in browser.
+
+### Entry 14
+**Prompt:** "ok let's move on" (to media upload pipeline)
+**Action:** Created Supabase Storage bucket (`media`, private) with three policies (event members can upload, event members can read, uploader can delete). Path structure: `{event_id}/{uuid}.{ext}`. Installed `exifr` for EXIF extraction. Built `MediaUpload` component (file picker, EXIF extraction of taken_at/lat/lng for photos, upload to Storage, insert into `media` table). Built `MediaGrid` component (loads media records + batch signed URLs, 3-column grid). Built `MediaItem` modal (full image/video, favourite toggle, tags with add/remove own, comments with add/edit/delete own). Updated `EventPage` to include upload form and grid. Several bugs resolved: (1) events INSERT RLS error — root cause was `.insert().select()` RETURNING clause checking SELECT policy before `handle_new_event` trigger committed the `event_members` row; fixed by pre-generating UUID client-side and removing `.select()`. (2) `my_event_ids()` changed from `STABLE` to `VOLATILE` (SQL run in Supabase editor and migration updated). (3) `PGRST201` ambiguous relationship between `media` and `users` — fixed by specifying `users!media_uploaded_by_fkey` in the select. All confirmed working: upload, grid display, modal, favouriting.
 
 ### Entry 15
 **Prompt:** "ok let's move on" (to AI layer)
@@ -143,5 +135,25 @@ Each entry captures the prompt, what was done, and any key decisions made.
 ### Entry 30
 **Prompt:** "ok let's work on adding users to a group. when a user creates a new group or wants to add members to a group in their groups list, the text bar that allows users to type in the contact email should still be there at the top of the modal as a primary option. but the user's contact list should render with checkboxes next to them to indicate that the user wants to add them to the group. then there should be a button to allow for adding multiple users to the same group at one time."
 **Action:** Activated the previously deferred "add contacts to a group" feature. Asked one design clarification (single-modal vs two-step for the new-group flow); user chose two-step. Implementation: (1) `CreateGroup` now `.select('id, name').single()` on insert and passes the new group object through `onCreated(newGroup)`. (2) `GroupsPage` swaps the create modal for the existing `GroupDetail` modal by calling `setSelected(newGroup)` on create, so new groups land straight in member-management. (3) `GroupDetail` got a new "Add from your contacts" section under the existing email form: queries `contacts` (joined to `users` via `contact_id` FK), filters out users already in the group via a memberIds set, renders a checkbox list with a `Set<string>` of selected user_ids, and a single "Add Selected (N)" button that batch-inserts `group_members` rows. Empty states distinguish "no contacts yet" from "all your contacts are already in this group." Build clean (1.20s); lint errors are all pre-existing `react/prop-types` matching the rest of the codebase.
+
+---
+
+## Session 7 — 2026-05-15 (README & submission writeup)
+
+### Entry 31
+**Prompt:** "reference this url: [...sharepoint doc...]. i need to create a readme for this project, this will be the first app for the submission. do not write anything yet, just give me your approach and full plan"
+**Action:** SharePoint URL was inaccessible (HTTP 403). User pasted the full submission brief manually. Surveyed codebase (file tree, prompt_log, feature_changes, server/index.js, package.json, .env.example files). Confirmed this is the multi-user/team submission. Presented a full section-by-section plan before writing.
+
+### Entry 32
+**Prompt (series):** Screenshot placeholder preference, tagline input ("Memories Found, Never Lost" or similar), env value exclusion confirmed.
+**Action:** No questions remaining. Confirmed tagline, noted the "found/never lost" double meaning (AI search + emotional sense of rediscovering memories). Wrote the full README in one pass covering all eight required sections: Overview, Demo, Technology Stack, Development Approach with AI (tools, agents, key prompts, key decisions), Installation, Usage, Project Structure, Reflection.
+
+### Entry 33
+**Prompt:** "update your logs and relevant files"
+**Action:** User had edited the README directly: tagline changed to "Lost Memories, Forever Found"; Problem section rewritten as a conversational narrative with a HMW problem statement and solution framing ("A System of Records for Personal Moments"); "Features Wanted but Not Implemented" section added; "Co-Developing with AI Approach" phase table added to Development section; Key Prompts entries expanded with prompting rationale commentary; Reflection section headers renamed. Updated prompt_log (repo + memory), feature_changes (memory), and project_kithly memory to reflect final README state.
+
+### Entry 34
+**Prompt:** "ok remove entry 9 and 10 from the prompt log, and make sure the log is in proper running order"
+**Action:** Removed entries 9 and 10 (password redaction and migration deployment confirmation — administrative entries not relevant to the development narrative). Moved Entry 14 (media upload pipeline) from Session 2 to Session 3 where it falls numerically between entries 13 and 15. Moved Session 7 to the end of the file (it had been inserted before Session 6). Log now runs: Sessions 1 → 2 → 3 → 4 → 6 → 7, entries strictly ascending within each session.
 
 ---
