@@ -5,6 +5,11 @@ export const PageWrapper = styled.div`
   padding: ${({ theme }) => theme.spacing.xl};
   max-width: 1100px;
   margin: 0 auto;
+
+  @media (max-width: 639px) {
+    padding: ${({ theme }) => theme.spacing.md};
+    padding-bottom: calc(${({ theme }) => theme.spacing.md} + 56px + env(safe-area-inset-bottom));
+  }
 `
 
 export const GlassCard = styled.div`

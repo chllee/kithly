@@ -77,7 +77,7 @@ app.post('/process-media', async (req, res) => {
 
   const { data: media, error: mediaError } = await supabase
     .from('media')
-    .select('id, type, storage_path, caption, media_tags(tag)')
+    .select('id, type, storage_path, caption, taken_at, event:events(name, start_date, end_date), media_tags(tag)')
     .eq('id', mediaId)
     .single()
 
@@ -100,11 +100,26 @@ app.post('/process-media', async (req, res) => {
 
   const { description, tags: aiTags } = await describeImage(imageBase64, mimeType)
 
+  function formatDate(isoStr) {
+    return new Date(isoStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  }
+
+  const event = media.event
+  const temporalLines = []
+  if (event?.name) temporalLines.push(`Event: ${event.name}`)
+  if (event?.start_date && event?.end_date) {
+    temporalLines.push(`Event dates: ${formatDate(event.start_date)} to ${formatDate(event.end_date)}`)
+  } else if (event?.start_date) {
+    temporalLines.push(`Event date: ${formatDate(event.start_date)}`)
+  }
+  if (media.taken_at) temporalLines.push(`Photo taken: ${formatDate(media.taken_at)}`)
+
   const userTags = media.media_tags.map(t => t.tag).join(', ')
   const embeddingInput = [
     description,
     media.caption ? `Caption: ${media.caption}` : null,
     userTags ? `Tags: ${userTags}` : null,
+    ...temporalLines,
   ].filter(Boolean).join('\n')
 
   const embedding = await embedText(embeddingInput)
@@ -129,7 +144,8 @@ app.post('/reprocess-all', async (req, res) => {
   const existingIds = (existing ?? []).map(r => r.media_id)
 
   let query = supabase.from('media').select('id').eq('type', 'photo').is('deleted_at', null)
-  if (existingIds.length > 0) query = query.not('id', 'in', `(${existingIds.join(',')})`)
+  const { force } = req.body
+  if (!force && existingIds.length > 0) query = query.not('id', 'in', `(${existingIds.join(',')})`)
   const { data: unprocessed, error } = await query
 
   if (error) return res.status(500).json({ error: error.message })

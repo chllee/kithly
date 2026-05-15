@@ -15,6 +15,10 @@ const Bar = styled.nav`
   height: 64px;
   background: ${({ theme }) => theme.colors.white};
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+
+  @media (max-width: 639px) {
+    padding: 0 ${({ theme }) => theme.spacing.md};
+  }
 `
 
 const Wordmark = styled(Link)`
@@ -27,6 +31,10 @@ const Wordmark = styled(Link)`
 const NavLinks = styled.div`
   display: flex;
   gap: 4px;
+
+  @media (max-width: 639px) {
+    display: none;
+  }
 `
 
 const NavLink = styled(Link)`
@@ -62,6 +70,12 @@ const UserArea = styled.div`
   font-size: ${({ theme }) => theme.font.sizeSm};
 `
 
+const UserName = styled.span`
+  @media (max-width: 639px) {
+    display: none;
+  }
+`
+
 const SignOutButton = styled.button`
   display: flex;
   align-items: center;
@@ -86,36 +100,96 @@ const SignOutButton = styled.button`
   }
 `
 
+const SignOutLabel = styled.span`
+  @media (max-width: 639px) {
+    display: none;
+  }
+`
+
+const BottomBar = styled.nav`
+  display: none;
+
+  @media (max-width: 639px) {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    height: 56px;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: ${({ theme }) => theme.colors.white};
+    border-top: 1px solid ${({ theme }) => theme.colors.border};
+    justify-content: space-around;
+    align-items: stretch;
+  }
+`
+
+const BottomLink = styled(Link)`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  flex: 1;
+  color: ${({ $active, theme }) => $active ? theme.colors.primary : theme.colors.textMuted};
+  font-size: ${({ theme }) => theme.font.sizeXs};
+  font-weight: ${({ theme }) => theme.font.weightSemibold};
+  transition: ${({ theme }) => theme.transition};
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+`
+
 export default function Nav() {
   const { session } = useAuth()
   const location = useLocation()
 
   return (
-    <Bar>
-      <Wordmark to="/">Kithly</Wordmark>
+    <>
+      <Bar>
+        <Wordmark to="/">Kithly</Wordmark>
 
-      <NavLinks>
-        <NavLink to="/feed" $active={location.pathname === '/feed'}>
+        <NavLinks>
+          <NavLink to="/feed" $active={location.pathname === '/feed'}>
+            <Images />
+            Feed
+          </NavLink>
+          <NavLink to="/events" $active={location.pathname.startsWith('/events')}>
+            <Home />
+            Events
+          </NavLink>
+          <NavLink to="/groups" $active={location.pathname === '/groups'}>
+            <Users />
+            Groups
+          </NavLink>
+        </NavLinks>
+
+        <UserArea>
+          <UserName>{session.user.user_metadata.first_name}</UserName>
+          <SignOutButton onClick={() => supabase.auth.signOut()}>
+            <LogOut />
+            <SignOutLabel>Sign out</SignOutLabel>
+          </SignOutButton>
+        </UserArea>
+      </Bar>
+
+      <BottomBar>
+        <BottomLink to="/feed" $active={location.pathname === '/feed'}>
           <Images />
           Feed
-        </NavLink>
-        <NavLink to="/events" $active={location.pathname.startsWith('/events')}>
+        </BottomLink>
+        <BottomLink to="/events" $active={location.pathname.startsWith('/events')}>
           <Home />
           Events
-        </NavLink>
-        <NavLink to="/groups" $active={location.pathname === '/groups'}>
+        </BottomLink>
+        <BottomLink to="/groups" $active={location.pathname === '/groups'}>
           <Users />
           Groups
-        </NavLink>
-      </NavLinks>
-
-      <UserArea>
-        <span>{session.user.user_metadata.first_name}</span>
-        <SignOutButton onClick={() => supabase.auth.signOut()}>
-          <LogOut />
-          Sign out
-        </SignOutButton>
-      </UserArea>
-    </Bar>
+        </BottomLink>
+      </BottomBar>
+    </>
   )
 }

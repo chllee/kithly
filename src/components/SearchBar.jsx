@@ -11,6 +11,20 @@ const SearchForm = styled.form`
   gap: ${({ theme }) => theme.spacing.sm};
 `
 
+const SearchButton = styled(PrimaryButton)`
+  @media (max-width: 639px) {
+    padding: 10px;
+    flex-shrink: 0;
+    aspect-ratio: 1;
+  }
+`
+
+const BtnLabel = styled.span`
+  @media (max-width: 639px) {
+    display: none;
+  }
+`
+
 const ResultsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -74,10 +88,10 @@ export default function SearchBar({ eventId }) {
           value={query}
           onChange={e => setQuery(e.target.value)}
         />
-        <PrimaryButton type="submit" disabled={loading}>
+        <SearchButton type="submit" disabled={loading}>
           <Search />
-          {loading ? 'Searching…' : 'Search'}
-        </PrimaryButton>
+          <BtnLabel>{loading ? 'Searching…' : 'Search'}</BtnLabel>
+        </SearchButton>
       </SearchForm>
 
       {error && <ErrorMsg style={{ marginTop: '8px' }}>{error}</ErrorMsg>}

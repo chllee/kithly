@@ -5,19 +5,27 @@ import { Plus, CalendarDays, MapPin, ChevronRight } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import Nav from '../components/Nav'
 import SearchBar from '../components/SearchBar'
-import { PageWrapper, PageTitle, GlassCard, PrimaryButton, MutedText } from '../components/ui'
+import { PageWrapper, PrimaryButton, MutedText } from '../components/ui'
 
 const Header = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   margin-bottom: ${({ theme }) => theme.spacing.xl};
-  flex-wrap: wrap;
-  gap: ${({ theme }) => theme.spacing.md};
 `
 
-const SearchSection = styled(GlassCard)`
+const SearchSection = styled.div`
   margin-bottom: ${({ theme }) => theme.spacing.xl};
+
+  input {
+    background: rgba(255, 255, 255, 0.75);
+  }
+
+  @media (min-width: 640px) {
+    max-width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+  }
 `
 
 const EventGrid = styled.div`
@@ -29,8 +37,6 @@ const EventGrid = styled.div`
 const EventCard = styled(Link)`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.sm};
-  padding: ${({ theme }) => theme.spacing.lg};
   background: ${({ theme }) => theme.colors.white};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radius.lg};
@@ -38,12 +44,39 @@ const EventCard = styled(Link)`
   transition: ${({ theme }) => theme.transition};
   cursor: pointer;
   text-decoration: none;
-  border-top: 3px solid ${({ theme }) => theme.colors.primary};
+  overflow: hidden;
 
   &:hover {
     box-shadow: ${({ theme }) => theme.glass.shadowStrong};
     transform: translateY(-2px);
   }
+
+  &:hover img {
+    transform: scale(1.04);
+  }
+`
+
+const CardCover = styled.div`
+  width: 100%;
+  height: 160px;
+  background: ${({ theme }) => theme.colors.border};
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.2s ease;
+  }
+`
+
+const CardBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.sm};
+  padding: ${({ theme }) => theme.spacing.lg};
+  flex: 1;
 `
 
 const EventName = styled.h3`
@@ -66,13 +99,17 @@ const EventMeta = styled.div`
   }
 `
 
-const CardFooter = styled.div`
+const DateRow = styled.div`
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   margin-top: auto;
   padding-top: ${({ theme }) => theme.spacing.sm};
+`
+
+const ChevronIcon = styled.div`
   color: ${({ theme }) => theme.colors.primary};
+  display: flex;
 
   svg {
     width: 16px;
@@ -82,6 +119,7 @@ const CardFooter = styled.div`
 
 export default function EventsPage() {
   const [events, setEvents] = useState([])
+  const [covers, setCovers] = useState({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -90,15 +128,46 @@ export default function EventsPage() {
         .from('events')
         .select('id, name, start_date, end_date, location')
         .order('start_date', { ascending: false })
-      if (!error) setEvents(data)
+      if (error || !data) { setLoading(false); return }
+
+      setEvents(data)
+
+      const eventIds = data.map(e => e.id)
+      if (eventIds.length > 0) {
+        const { data: mediaData } = await supabase
+          .from('media')
+          .select('event_id, storage_path')
+          .is('deleted_at', null)
+          .eq('type', 'photo')
+          .in('event_id', eventIds)
+          .order('created_at', { ascending: false })
+
+        if (mediaData?.length) {
+          const firstPerEvent = {}
+          for (const m of mediaData) {
+            if (!firstPerEvent[m.event_id]) firstPerEvent[m.event_id] = m
+          }
+          const paths = Object.values(firstPerEvent).map(m => m.storage_path)
+          const { data: urlData } = await supabase.storage.from('media').createSignedUrls(paths, 3600)
+          const urlMap = Object.fromEntries((urlData ?? []).map(u => [u.path, u.signedUrl]))
+          const coverMap = {}
+          for (const [eid, m] of Object.entries(firstPerEvent)) {
+            coverMap[eid] = urlMap[m.storage_path]
+          }
+          setCovers(coverMap)
+        }
+      }
+
       setLoading(false)
     }
     load()
   }, [])
 
-  function formatDates(start, end) {
-    if (!end || end === start) return start
-    return `${start} – ${end}`
+  function formatDate(dateStr) {
+    if (!dateStr) return ''
+    const [year, month] = dateStr.split('-')
+    return new Date(parseInt(year), parseInt(month) - 1, 1)
+      .toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
   }
 
   return (
@@ -106,7 +175,6 @@ export default function EventsPage() {
       <Nav />
       <PageWrapper>
         <Header>
-          <PageTitle>Events</PageTitle>
           <PrimaryButton as={Link} to="/events/new">
             <Plus />
             New Event
@@ -125,20 +193,25 @@ export default function EventsPage() {
         <EventGrid>
           {events.map(event => (
             <EventCard to={`/events/${event.id}`} key={event.id}>
-              <EventName>{event.name}</EventName>
-              <EventMeta>
-                <CalendarDays />
-                {formatDates(event.start_date, event.end_date)}
-              </EventMeta>
-              {event.location && (
-                <EventMeta>
-                  <MapPin />
-                  {event.location}
-                </EventMeta>
-              )}
-              <CardFooter>
-                <ChevronRight />
-              </CardFooter>
+              <CardCover>
+                {covers[event.id] && <img src={covers[event.id]} alt={event.name} />}
+              </CardCover>
+              <CardBody>
+                <EventName>{event.name}</EventName>
+                {event.location && (
+                  <EventMeta>
+                    <MapPin />
+                    {event.location}
+                  </EventMeta>
+                )}
+                <DateRow>
+                  <EventMeta>
+                    <CalendarDays />
+                    {formatDate(event.start_date)}
+                  </EventMeta>
+                  <ChevronIcon><ChevronRight /></ChevronIcon>
+                </DateRow>
+              </CardBody>
             </EventCard>
           ))}
         </EventGrid>
